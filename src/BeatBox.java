@@ -1,9 +1,8 @@
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
-import javax.sound.midi.Track;
+import javax.sound.midi.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 public class BeatBox {
@@ -101,7 +100,77 @@ public class BeatBox {
         for (int i = 0; i < 16; i++) {
             trackList = new int[16];
 
-            int key = instruments[]
+            int key = instruments[i];
+            for (int j = 0; j < 16; j++) {
+                JCheckBox jc = (JCheckBox)checkBoxList.get(j + (16 * i));
+                if (jc.isSelected()){
+                    trackList[j] = key;
+                } else {
+                    trackList[j] = 0;
+                }
+            }
+
+            makeTracks(trackList);
+            track.add(makeEvent(176, 1, 127, 0, 16));
         }
+
+        track.add(makeEvent(192, 9, 1, 0, 15));
+        try{
+            sequencer.setSequence(sequence);
+            sequencer.setLoopCount(sequencer.LOOP_CONTINUOUSLY);
+            sequencer.start();
+            sequencer.setTempoInBPM(120);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public class MyStartListener implements ActionListener {
+        public void actionPerformed(ActionEvent a){
+            buildTrackAndStart();
+        }
+    }
+
+    public class MyStopListener implements ActionListener {
+        public void actionPerformed(ActionEvent a){
+            sequencer.stop();
+        }
+    }
+
+    public class MyUpTempoListener implements ActionListener {
+        public void actionPerformed(ActionEvent a){
+            float tempoFactor = sequencer.getTempoFactor();
+            sequencer.setTempoFactor((float)(tempoFactor * 1.03));
+        }
+    }
+
+    public class MyDownTempoListener implements ActionListener {
+        public void actionPerformed(ActionEvent a){
+            float tempoFactor = sequencer.getTempoFactor();
+            sequencer.setTempoFactor((float)(tempoFactor * 0.97));
+        }
+    }
+
+    public void makeTracks(int[] list){
+        for (int i = 0; i < 16; i++) {
+            int key = list[i];
+
+            if (key != 0) {
+                track.add(makeEvent(144, 9, key, 100, i));
+                track.add(makeEvent(128, 9, key, 100, i+1));
+            }
+        }
+    }
+
+    public MidiEvent makeEvent(int comd, int chan, int one, int two, int tick){
+        MidiEvent event = null;
+        try {
+            ShortMessage a = new ShortMessage();
+            a.setMessage(comd, chan, one, two);
+            event = new MidiEvent(a, tick);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return event;
     }
 }
