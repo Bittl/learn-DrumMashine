@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.util.ArrayList;
 
 public class BeatBox {
@@ -20,7 +21,13 @@ public class BeatBox {
     int[] instruments = {35, 42, 46, 38, 49, 39, 50, 60, 70, 72, 64, 56, 58, 47, 67, 63};
 
     public static void main(String[] args) {
-        new BeatBox2().buildGUI;
+//        new BeatBox2().buildGUI;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new BeatBox().buildGUI();
+            }
+        });
     }
 
     public void buildGUI(){
@@ -172,5 +179,50 @@ public class BeatBox {
             e.printStackTrace();
         }
         return event;
+    }
+
+    public class MySendListener implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean[] checkBoxState = new boolean[256];
+            for (int i = 0; i < 256; i++) {
+                JCheckBox check = (JCheckBox)checkBoxList.get(i);
+                if (check.isSelected()){
+                    checkBoxState[i] = true;
+                }
+            }
+            try{
+                FileOutputStream fileStream = new FileOutputStream(new File("Checkbox.ser"));
+                ObjectOutputStream os = new ObjectOutputStream(fileStream);
+                os.writeObject(checkBoxState);
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public class MyReadListener implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean[] checkBoxState = null;
+            try{
+                FileInputStream fileIn = new FileInputStream(new File("Checkbox.ser"));
+                ObjectInputStream is = new ObjectInputStream(fileIn);
+                checkBoxState = (boolean[]) is.readObject();
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+            for (int i = 0; i < 256; i++) {
+                JCheckBox check = (JCheckBox) checkBoxList.get(i);
+                if (checkBoxState[i]){
+                    check.setSelected(true);
+                } else {
+                    check.setSelected(false);
+                }
+            }
+
+            sequencer.stop();
+            buildTrackAndStart();
+        }
     }
 }
